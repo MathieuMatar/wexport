@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ChatKeeper.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ChatKeeper"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root">
+        <Grid.Resources>
+            <Style x:Key="StepTitle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
+                <Setter Property="Margin" Value="0,0,0,12" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style x:Key="Body" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+            <Style x:Key="GuideImage" TargetType="Image">
+                <Setter Property="Width" Value="180" />
+                <Setter Property="Height" Value="370" />
+                <Setter Property="Stretch" Value="Uniform" />
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Padding="16,0,140,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Image Source="ms-appx:///Assets/AppIcon.png" Width="16" Height="16" />
+                <TextBlock x:Name="AppTitleText" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Step indicator: 1 Key · 2 Phone · 3 Copy · 4 Contacts · 5 Unlock · 6 Build · 7 Done -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="24,8,24,8">
+            <StackPanel x:Name="StepIndicator" Orientation="Horizontal" Spacing="4" />
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" Padding="24,8,24,0">
+
+            <!-- Step 0: Welcome -->
+            <ScrollViewer x:Name="WelcomePanel">
+                <StackPanel MaxWidth="720" HorizontalAlignment="Left" Spacing="16">
+                    <TextBlock x:Uid="Welcome_Title" Style="{StaticResource StepTitle}" />
+                    <TextBlock x:Uid="Welcome_Body" Style="{StaticResource Body}" />
+                    <TextBlock x:Uid="Welcome_Time" Style="{StaticResource Body}" />
+                    <InfoBar x:Uid="Welcome_Private" IsOpen="True" IsClosable="False" Severity="Success" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Uid="Welcome_Start" Style="{StaticResource AccentButtonStyle}" Click="OnStart" MinWidth="120" />
+                    </StackPanel>
+                    <HyperlinkButton x:Uid="Welcome_AlreadyCopied" Click="OnAlreadyCopied" Padding="0" />
+                    <InfoBar x:Name="WelcomeError" Severity="Error" IsOpen="False" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 1: Get your key -->
+            <ScrollViewer x:Name="KeyGuidePanel" Visibility="Collapsed">
+                <StackPanel Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Guide_Title" Style="{StaticResource StepTitle}" />
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-01-settings.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step1" Style="{StaticResource Body}" />
+                            </StackPanel>
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-02-chat-backup.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step2" Style="{StaticResource Body}" />
+                            </StackPanel>
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-03-e2e-turn-on.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step3" Style="{StaticResource Body}" />
+                            </StackPanel>
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-04-use-64-digit.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step4" Style="{StaticResource Body}" />
+                            </StackPanel>
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-05-your-key.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step5" Style="{StaticResource Body}" />
+                            </StackPanel>
+                            <StackPanel Width="190" Spacing="8">
+                                <Image Source="ms-appx:///Assets/Guide/key-06-back-up.png" Style="{StaticResource GuideImage}" />
+                                <TextBlock x:Uid="Guide_Step6" Style="{StaticResource Body}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <InfoBar x:Uid="Guide_NoWait" IsOpen="True" IsClosable="False" Severity="Informational" />
+                    <TextBlock x:Uid="Guide_AlreadyOn" Style="{StaticResource Body}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 2: Connect your phone -->
+            <ScrollViewer x:Name="PhonePanel" Visibility="Collapsed">
+                <StackPanel Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Phone_Title" Style="{StaticResource StepTitle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="24">
+                        <Image Source="ms-appx:///Assets/Guide/usb-01-file-transfer.png" Style="{StaticResource GuideImage}" />
+                        <Image Source="ms-appx:///Assets/Guide/usb-02-allow-access.png" Style="{StaticResource GuideImage}" />
+                        <StackPanel MaxWidth="460" Spacing="12" VerticalAlignment="Top">
+                            <TextBlock x:Uid="Phone_Instructions" Style="{StaticResource Body}" />
+
+                            <!-- Waiting -->
+                            <StackPanel x:Name="PhoneWaiting" Orientation="Horizontal" Spacing="12">
+                                <ProgressRing IsActive="True" Width="24" Height="24" />
+                                <TextBlock x:Uid="Phone_Waiting" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- Connected but locked / not in File transfer mode -->
+                            <InfoBar x:Name="PhoneLocked" x:Uid="Phone_Locked" Severity="Warning" IsClosable="False" IsOpen="False" />
+
+                            <!-- One phone -->
+                            <Border x:Name="PhoneSingle" Style="{StaticResource Card}" Visibility="Collapsed">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon Glyph="&#xE8EA;" FontSize="32" />
+                                        <TextBlock x:Name="PhoneSingleName" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock x:Uid="Phone_IsThisYours" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button x:Uid="Phone_Yes" Style="{StaticResource AccentButtonStyle}" Click="OnPhoneYes" />
+                                        <Button x:Uid="Phone_No" Click="OnPhoneNo" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Several phones -->
+                            <Border x:Name="PhoneMany" Style="{StaticResource Card}" Visibility="Collapsed">
+                                <StackPanel Spacing="12">
+                                    <TextBlock x:Uid="Phone_PickOne" />
+                                    <ListView x:Name="PhoneList" SelectionMode="Single" MaxHeight="220" SelectionChanged="OnPhoneListSelection" />
+                                    <Button x:Name="PhoneUseSelected" x:Uid="Phone_UseSelected" Style="{StaticResource AccentButtonStyle}" Click="OnPhoneUseSelected" IsEnabled="False" />
+                                </StackPanel>
+                            </Border>
+
+                            <Expander x:Uid="Phone_NotShowing" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                <TextBlock x:Uid="Phone_Tips" Style="{StaticResource Body}" />
+                            </Expander>
+
+                            <!-- After confirmation -->
+                            <StackPanel x:Name="PhoneSearching" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+                                <ProgressRing IsActive="True" Width="24" Height="24" />
+                                <TextBlock x:Uid="Phone_Searching" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Border x:Name="PhoneResult" Style="{StaticResource Card}" Visibility="Collapsed">
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Name="PhoneFoundText" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock x:Name="PhoneBackupDate" Style="{StaticResource Body}" />
+                                    <RadioButtons x:Name="PhoneAppChoice" x:Uid="Phone_WhichApp" Visibility="Collapsed" SelectionChanged="OnPhoneAppChoice" />
+                                </StackPanel>
+                            </Border>
+                            <InfoBar x:Name="PhoneStale" Severity="Warning" IsClosable="False" IsOpen="False">
+                                <InfoBar.ActionButton>
+                                    <Button x:Uid="Phone_GoToStep1" Click="OnGoToStep1" />
+                                </InfoBar.ActionButton>
+                                <InfoBar.Content>
+                                    <Button x:Uid="Phone_ContinueAnyway" Click="OnStaleContinue" Margin="0,0,0,12" />
+                                </InfoBar.Content>
+                            </InfoBar>
+                            <InfoBar x:Name="PhoneError" Severity="Error" IsClosable="False" IsOpen="False">
+                                <InfoBar.ActionButton>
+                                    <Button x:Name="PhoneErrorAction" x:Uid="Phone_GoToStep1" Click="OnGoToStep1" />
+                                </InfoBar.ActionButton>
+                            </InfoBar>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 3: Choose where to save, then copy -->
+            <ScrollViewer x:Name="CopyPanel" Visibility="Collapsed">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left" Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Copy_Title" Style="{StaticResource StepTitle}" />
+                    <TextBlock x:Uid="Copy_Location" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="CopyLocation" IsReadOnly="True" />
+                        <Button x:Name="CopyChange" x:Uid="Copy_Change" Grid.Column="1" Click="OnChangeLocation" />
+                    </Grid>
+                    <TextBlock x:Name="CopyFolderName" Style="{StaticResource Body}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <InfoBar x:Name="CopySpace" Severity="Error" IsClosable="False" IsOpen="False">
+                        <InfoBar.ActionButton>
+                            <Button x:Uid="Copy_ChangeLocation" Click="OnChangeLocation" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <Button x:Name="CopyStart" x:Uid="Copy_Start" Style="{StaticResource AccentButtonStyle}" Click="OnStartCopy" />
+
+                    <StackPanel x:Name="CopyProgressArea" Spacing="8" Visibility="Collapsed">
+                        <ProgressBar x:Name="CopyProgress" Maximum="1" />
+                        <TextBlock x:Name="CopyProgressText" Style="{StaticResource Body}" />
+                        <TextBlock x:Name="CopyCurrentFile" Style="{StaticResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <InfoBar x:Name="CopyDisconnected" x:Uid="Copy_Disconnected" Severity="Warning" IsClosable="False" IsOpen="False" />
+                    <InfoBar x:Name="CopyDone" Severity="Success" IsClosable="False" IsOpen="False" />
+                    <InfoBar x:Name="CopyError" Severity="Error" IsClosable="False" IsOpen="False" />
+                    <Expander x:Name="CopyFailures" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Visibility="Collapsed">
+                        <TextBlock x:Name="CopyFailureList" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 4: Contact names (optional) -->
+            <ScrollViewer x:Name="ContactsPanel" Visibility="Collapsed">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left" Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Contacts_Title" Style="{StaticResource StepTitle}" />
+                    <TextBlock x:Uid="Contacts_Body" Style="{StaticResource Body}" />
+                    <Expander x:Uid="Contacts_HowTo" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="12">
+                            <SelectorBar x:Name="ContactsHowToTabs" SelectionChanged="OnContactsTab">
+                                <SelectorBarItem x:Uid="Contacts_TabGoogle" IsSelected="True" />
+                                <SelectorBarItem x:Uid="Contacts_TabPhone" />
+                            </SelectorBar>
+                            <TextBlock x:Name="ContactsHowToGoogle" x:Uid="Contacts_FromGoogle" Style="{StaticResource Body}" />
+                            <StackPanel x:Name="ContactsHowToPhone" Spacing="8" Visibility="Collapsed">
+                                <TextBlock x:Uid="Contacts_FromPhone" Style="{StaticResource Body}" />
+                                <Button x:Name="ContactsBrowsePhone" x:Uid="Contacts_BrowsePhone" Click="OnFindVcfOnPhone" />
+                                <ListView x:Name="ContactsPhoneFiles" SelectionMode="Single" MaxHeight="180" Visibility="Collapsed"
+                                          SelectionChanged="OnPhoneVcfSelected" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Uid="Contacts_Choose" Click="OnChooseVcf" />
+                        <Button x:Uid="Contacts_Skip" Click="OnSkipContacts" />
+                    </StackPanel>
+                    <InfoBar x:Name="ContactsChosen" Severity="Success" IsClosable="False" IsOpen="False" />
+                    <InfoBar x:Name="ContactsError" Severity="Error" IsClosable="True" IsOpen="False" />
+                    <ComboBox x:Name="CountryCode" x:Uid="Contacts_Country" IsEditable="True" MinWidth="320" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 5: Enter your key -->
+            <ScrollViewer x:Name="KeyPanel" Visibility="Collapsed">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left" Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Key_Title" Style="{StaticResource StepTitle}" />
+                    <TextBlock x:Uid="Key_Body" Style="{StaticResource Body}" />
+                    <!-- Keys are always left-to-right, even in an RTL UI. -->
+                    <Grid x:Name="KeyGrid" FlowDirection="LeftToRight" RowSpacing="8" ColumnSpacing="8" HorizontalAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ToggleButton x:Name="KeyShow" x:Uid="Key_Hide" Click="OnKeyShowToggle" />
+                        <Button x:Uid="Key_Paste" Click="OnKeyPasteButton" />
+                        <Button x:Uid="Key_Clear" Click="OnKeyClear" />
+                        <TextBlock x:Name="KeyStatus" VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                    <InfoBar x:Name="KeyWrong" x:Uid="Key_Wrong" Severity="Error" IsClosable="True" IsOpen="False" />
+                    <TextBlock x:Uid="Key_Privacy" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 6: Unlock and build -->
+            <ScrollViewer x:Name="BuildPanel" Visibility="Collapsed">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left" Spacing="16" Padding="0,0,0,16">
+                    <TextBlock x:Uid="Build_Title" Style="{StaticResource StepTitle}" />
+                    <StackPanel x:Name="BuildStages" Spacing="10" />
+                    <ProgressBar x:Name="BuildProgress" Maximum="1" IsIndeterminate="True" />
+                    <TextBlock x:Name="BuildStatus" Style="{StaticResource Body}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <InfoBar x:Name="BuildError" Severity="Error" IsClosable="False" IsOpen="False">
+                        <InfoBar.ActionButton>
+                            <Button x:Name="BuildRetry" x:Uid="Build_TryAgain" Click="OnBuildRetry" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    <Expander x:Name="BuildDetails" x:Uid="Build_Details" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Visibility="Collapsed">
+                        <TextBlock x:Name="BuildDetailsText" IsTextSelectionEnabled="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12" />
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 7: Done -->
+            <Grid x:Name="DonePanel" Visibility="Collapsed" RowSpacing="12" Padding="0,0,0,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" MinHeight="320" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Uid="Done_Title" Style="{StaticResource StepTitle}" Margin="0" />
+                <Grid Grid.Row="1" ColumnSpacing="24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="DoneSummary" Style="{StaticResource Body}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                        <Button x:Uid="Done_OpenBrowser" Style="{StaticResource AccentButtonStyle}" Click="OnOpenInBrowser" />
+                        <Button x:Uid="Done_OpenFolder" Click="OnOpenFolder" />
+                    </StackPanel>
+                </Grid>
+                <Border Grid.Row="2" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <WebView2 x:Name="Preview" />
+                </Border>
+                <InfoBar Grid.Row="3" x:Uid="Done_Advice" Severity="Informational" IsOpen="True" IsClosable="False" />
+            </Grid>
+        </Grid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="3" Padding="24,12,24,16" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BackButton" x:Uid="Nav_Back" Click="OnBack" MinWidth="100" />
+            <Button x:Name="CancelButton" x:Uid="Nav_Cancel" Grid.Column="2" Click="OnCancel" MinWidth="100" Visibility="Collapsed" />
+            <Button x:Name="NextButton" Grid.Column="3" Style="{StaticResource AccentButtonStyle}" Click="OnNext" MinWidth="120" />
+        </Grid>
+    </Grid>
+</Window>

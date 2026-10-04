@@ -1,0 +1,110 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  attestations: read
+
+jobs:
+  core-linux:
+    name: Core tests + end-to-end (Linux, wtsexporter from PyPI)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev nlohmann-json3-dev ninja-build
+          python3 -m pip install --user "whatsapp-chat-exporter[crypt15]==0.13.0" pycryptodome
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Unit tests
+        run: ./build/core-tests
+      - name: Viewer test dependencies
+        working-directory: tests/viewer
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: End-to-end (copy, real wtsexporter 0.13.0, archive, viewer)
+        run: python3 tests/e2e/run_e2e.py --cli build/chatkeeper-cli --exporter "$HOME/.local/bin/wtsexporter" --viewer-check
+
+  app-windows:
+    name: WinUI 3 app (Windows, official wtsexporter.exe)
+    runs-on: windows-latest
+    env:
+      VCPKG_ROOT: C:\vcpkg
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch and verify the official wtsexporter 0.13.0
+        id: exporter
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./tools/fetch-exporter.ps1 -Version 0.13.0
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: vcpkg integration
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" integrate install
+        shell: pwsh
+
+      - name: NuGet restore
+        run: nuget restore ChatKeeper.sln
+
+      - name: Build app (Release x64)
+        run: msbuild ChatKeeper.sln /m /p:Configuration=Release /p:Platform=x64 /v:minimal /bl:out\msbuild.binlog
+
+      - name: Locate app output
+        id: out
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter ChatKeeper.exe -Path . | Where-Object { $_.FullName -match '\\Release\\' } | Select-Object -First 1
+          if (-not $exe) { throw "ChatKeeper.exe not found" }
+          "dir=$($exe.DirectoryName)" >> $env:GITHUB_OUTPUT
+          Get-ChildItem $exe.DirectoryName | Select-Object Name, Length | Format-Table | Out-String | Write-Host
+
+      - name: Core tests + CLI (MSVC)
+        shell: pwsh
+        run: |
+          cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -A x64
+          cmake --build build --config Release
+          ./build/Release/core-tests.exe
+
+      - name: End-to-end with the official wtsexporter.exe (Windows process runner, crypt15)
+        if: steps.exporter.outcome == 'success'
+        shell: pwsh
+        run: |
+          python -m pip install pycryptodome
+          python tests/e2e/run_e2e.py --cli build/Release/chatkeeper-cli.exe --exporter exporter/wtsexporter.exe
+
+      - name: Installer
+        if: steps.exporter.outcome == 'success'
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DSourceDir=${{ steps.out.outputs.dir }}" installer\ChatKeeper.iss
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ChatKeeper-x64
+          path: |
+            ${{ steps.out.outputs.dir }}
+            out/*.exe
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: msbuild-log
+          path: out/msbuild.binlog
+          if-no-files-found: ignore

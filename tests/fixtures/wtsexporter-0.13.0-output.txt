@@ -1,0 +1,12 @@
+[INFO] Imported 2 contacts/vcards
+[INFO] Decryption key specified, decrypting WhatsApp backup...
+[INFO] Processed 2 contacts
+Processing contacts:   0%|          | 0/2 [00:00<?, ?contact/s]                                                               [INFO] Processed 2 contacts in less than a second
+Processing messages:   0%|          | 0/63 [00:00<?, ?msg/s]                                                            [INFO] Processing reactions...Processing reactions:   0%|          | 0/1 [00:00<?, ?reaction/s]                                                                 [INFO] Processed 1 reactions in less than a second
+[INFO] Processed 63 messages in less than a second
+Processing media:   0%|          | 0/6 [00:00<?, ?media/s]                                                          [INFO] Processed 6 media in less than a second
+Processing vCards: 0vcard [00:00, ?vcard/s]                                           [INFO] Processed 0 vCards in less than a second
+[INFO] Processing calls...(2)Processing calls:   0%|          | 0/2 [00:00<?, ?call/s]                                                         [INFO] Processed 2 calls in less than a second
+[INFO] Writing JSON file...[INFO] JSON file saved...(25.97 KB)
+[INFO] WhatsApp directory already exists in output directory. Skipping...
+[INFO] Everything is done!

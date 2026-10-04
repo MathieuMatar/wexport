@@ -1,0 +1,15 @@
+build/
+out/
+packages/
+vcpkg_installed/
+x64/
+ARM64/
+src/App/x64/
+src/App/ARM64/
+src/App/Generated Files/
+*.user
+.vs/
+node_modules/
+exporter/*
+!exporter/README.md
+__pycache__/

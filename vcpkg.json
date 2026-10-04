@@ -1,0 +1,9 @@
+{
+  "name": "chatkeeper",
+  "version-string": "0.1.0",
+  "description": "Windows app that turns an Android WhatsApp backup into an offline archive",
+  "dependencies": [
+    "sqlite3",
+    "nlohmann-json"
+  ]
+}

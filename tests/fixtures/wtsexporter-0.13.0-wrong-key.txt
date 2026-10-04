@@ -1,0 +1,39 @@
+[INFO] Decryption key specified, decrypting WhatsApp backup...
+Traceback (most recent call last):
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/android_crypt.py", line 122, in _decrypt_database
+    db_compressed = cipher.decrypt_and_verify(actual_ciphertext, tag)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Crypto/Cipher/_mode_gcm.py", line 568, in decrypt_and_verify
+    self.verify(received_mac_tag)
+  File "/opt/venv/lib/python3.11/site-packages/Crypto/Cipher/_mode_gcm.py", line 509, in verify
+    raise ValueError("MAC check failed")
+ValueError: MAC check failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/android_crypt.py", line 358, in decrypt_backup
+    db = _decrypt_crypt15(database, main_key, db_type)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/android_crypt.py", line 281, in _decrypt_crypt15
+    return _decrypt_database(db_ciphertext, main_key, iv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/android_crypt.py", line 125, in _decrypt_database
+    raise ValueError("Decryption/Authentication failed. Ensure you are using the correct key.")
+ValueError: Decryption/Authentication failed. Ensure you are using the correct key.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/venv/bin/wtsexporter", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/__main__.py", line 832, in main
+    error = decrypt_android_backup(args)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/__main__.py", line 492, in decrypt_android_backup
+    error_message = android_crypt.decrypt_backup(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.11/site-packages/Whatsapp_Chat_Exporter/android_crypt.py", line 362, in decrypt_backup
+    raise DecryptionError(f"Decryption failed: {e}") from e
+Whatsapp_Chat_Exporter.android_crypt.DecryptionError: Decryption failed: Decryption/Authentication failed. Ensure you are using the correct key.
