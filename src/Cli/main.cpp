@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
     BuildOptions bo;
     bo.exportDir = exportDir;
-    bo.exporterExe = PathFromUtf8(a["--exporter"]);
+    bo.exporterExe = fs::absolute(PathFromUtf8(a["--exporter"]));
     bo.viewerHtml = PathFromUtf8(a["--viewer"]);
     bo.key = *key;
     SecureClear(*key);

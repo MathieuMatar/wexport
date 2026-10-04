@@ -26,9 +26,16 @@ def run(cmd, **kw):
     return subprocess.run(cmd, text=True, capture_output=True, encoding="utf-8", errors="replace", **kw)
 
 
+EXPORT_LOG = []
+
+
 def check(cond, msg):
     if not cond:
         print("FAIL:", msg)
+        for path in EXPORT_LOG:
+            if os.path.exists(path):
+                print("---- " + path)
+                print(open(path, encoding="utf-8", errors="replace").read()[-6000:])
         sys.exit(1)
     print("ok:", msg)
 
@@ -56,6 +63,7 @@ def main():
     check(r.returncode == 0, "fixture built " + r.stderr[-300:])
     export = os.path.join(work, "WhatsApp Export Test Phone 2026-10-04 23-31")
     shutil.rmtree(export, ignore_errors=True)
+    EXPORT_LOG.append(os.path.join(export, "export-log.txt"))
     wrong = os.path.join(work, "wrong.txt")
     with open(wrong, "w") as f:
         f.write("f" * 64)

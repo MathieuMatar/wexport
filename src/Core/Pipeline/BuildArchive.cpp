@@ -87,19 +87,18 @@ BuildResult RunBuild(BuildOptions o, const CancelToken& cancel,
     if (pr.cancelled || cancel.IsCancelled()) return fail(BuildResult::Status::Cancelled, "Cancelled.");
     if (pr.startFailed)
         return fail(BuildResult::Status::ExporterFailed, "The exporter could not be started.", pr.startError);
+    std::string tail = parser.Tail() + "(exit code " + std::to_string(pr.exitCode) + ")";
     switch (ClassifyExporterResult(pr.exitCode, parser.FullText())) {
         case ExporterFailure::None:
             break;
         case ExporterFailure::WrongKey:
             return fail(BuildResult::Status::WrongKey,
-                        "That key doesn't open this backup. Check for typos and try again.", parser.Tail());
+                        "That key doesn't open this backup. Check for typos and try again.", tail);
         case ExporterFailure::NotABackup:
             return fail(BuildResult::Status::ExporterFailed,
-                        "The backup file looks damaged or incomplete. Make a fresh backup and copy it again.",
-                        parser.Tail());
+                        "The backup file looks damaged or incomplete. Make a fresh backup and copy it again.", tail);
         default:
-            return fail(BuildResult::Status::ExporterFailed, "Something went wrong while reading your backup.",
-                        parser.Tail());
+            return fail(BuildResult::Status::ExporterFailed, "Something went wrong while reading your backup.", tail);
     }
     if (!Exists(dir / PathFromUtf8(kChatsJson)))
         return fail(BuildResult::Status::ExporterFailed, "The exporter finished but wrote no messages.",
