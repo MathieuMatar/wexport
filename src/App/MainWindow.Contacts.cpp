@@ -33,7 +33,7 @@ namespace winrt::ChatKeeper::implementation
             int selected = -1, i = 0;
             for (const auto& c : ck::Countries())
             {
-                box.Items().Append(box_value(CountryItem(c)));
+                box.Items().Append(box_value(hstring(CountryItem(c))));
                 if (!region.empty() && ck::EqualsIgnoreCase(c.iso2, region)) selected = i;
                 ++i;
             }
@@ -146,7 +146,7 @@ namespace winrt::ChatKeeper::implementation
         ContactsBrowsePhone().IsEnabled(true);
         m_phoneVcfs = found;
         ContactsPhoneFiles().Items().Clear();
-        for (const auto& l : labels) ContactsPhoneFiles().Items().Append(box_value(l));
+        for (const auto& l : labels) ContactsPhoneFiles().Items().Append(box_value(hstring(l)));
         ContactsPhoneFiles().Visibility(found.empty() ? Visibility::Collapsed : Visibility::Visible);
         if (found.empty())
         {

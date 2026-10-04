@@ -28,7 +28,8 @@ for (const name of ["Alice Contact", "Bob WA", "WhatsApp Calls"])
 if (await page.isVisible("#pick")) fail("the chats.json picker is showing (chats.js not loaded)");
 
 // A photo from media/
-await page.click(`#list >> text=Alice Contact`);
+const openChat = name => page.locator("#list .item", { hasText: name }).first().click();
+await openChat("Alice Contact");
 const img = page.locator('#wall img[src*="WhatsApp%20Images/IMG-20260101-WA0001.jpg"], #wall img[src*="WhatsApp Images/IMG-20260101-WA0001.jpg"]');
 await img.first().waitFor({ timeout: 10000 }).catch(() => fail("photo element not rendered"));
 if (await img.count()) {
@@ -38,8 +39,9 @@ if (await img.count()) {
 }
 
 // Group members panel (members.js)
-const group = await page.evaluate(() => [...document.querySelectorAll("#list *")].find(e => /Family/.test(e.textContent) && e.children.length === 0)?.textContent);
-await page.click(`#list >> text=${group ? group.trim() : "Family"}`);
+await openChat("Family");
+await page.waitForFunction(() => document.querySelector("#ht")?.textContent.includes("Family"), null, { timeout: 5000 })
+  .catch(() => fail("group chat did not open"));
 if (!(await page.isVisible("#membtn"))) fail("members button hidden (members.js not loaded?)");
 else {
   await page.click("#membtn");

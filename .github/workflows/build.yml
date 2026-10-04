@@ -35,8 +35,12 @@ jobs:
         run: python3 tests/e2e/run_e2e.py --cli build/chatkeeper-cli --exporter "$HOME/.local/bin/wtsexporter" --viewer-check
 
   app-windows:
-    name: WinUI 3 app (Windows, official wtsexporter.exe)
-    runs-on: windows-latest
+    name: WinUI 3 app (${{ matrix.os }}, official wtsexporter.exe)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       VCPKG_ROOT: C:\vcpkg
     steps:
@@ -96,7 +100,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ChatKeeper-x64
+          name: ChatKeeper-x64-${{ matrix.os }}
           path: |
             ${{ steps.out.outputs.dir }}
             out/*.exe
@@ -105,6 +109,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: msbuild-log
+          name: msbuild-log-${{ matrix.os }}
           path: out/msbuild.binlog
           if-no-files-found: ignore

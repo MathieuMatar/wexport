@@ -139,7 +139,7 @@ namespace winrt::ChatKeeper::implementation
         if (withStorage.size() > 1 && changed)
         {
             PhoneList().Items().Clear();
-            for (const auto& d : withStorage) PhoneList().Items().Append(box_value(DeviceLabel(d)));
+            for (const auto& d : withStorage) PhoneList().Items().Append(box_value(hstring(DeviceLabel(d))));
             PhoneUseSelected().IsEnabled(false);
         }
     }

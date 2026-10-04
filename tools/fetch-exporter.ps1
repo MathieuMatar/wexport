@@ -8,6 +8,7 @@ param(
     [string]$Repo = "KnugiHK/WhatsApp-Chat-Exporter"
 )
 $ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $true
 $root = Split-Path -Parent $PSScriptRoot
 $dest = Join-Path $root "exporter"
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
@@ -15,7 +16,7 @@ $tmp = Join-Path ([IO.Path]::GetTempPath()) ("wtsexporter-" + $Version)
 Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 
-Write-Host "Release assets for $Repo $Version:"
+Write-Host "Release assets for ${Repo} ${Version}:"
 $assets = (gh release view $Version -R $Repo --json assets | ConvertFrom-Json).assets
 $assets | ForEach-Object { Write-Host ("  " + $_.name + "  (" + $_.size + " bytes)") }
 
@@ -43,6 +44,7 @@ gh api "repos/$Repo/contents/LICENSE?ref=$Version" -H "Accept: application/vnd.g
 Set-Content -Path (Join-Path $dest "VERSION") -Value "wtsexporter $Version ($($pick.name))"
 
 $env:PYTHONUTF8 = "1"
+$PSNativeCommandUseErrorActionPreference = $false
 $help = & (Join-Path $dest "wtsexporter.exe") --help 2>&1 | Out-String
 if ($LASTEXITCODE -ne 0) { throw "wtsexporter --help failed:`n$help" }
 foreach ($flag in @("--no-banner", "--wab", "--enrich-from-vcards", "--default-country-code", "--no-html", "Crypt15")) {

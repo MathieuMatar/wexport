@@ -180,7 +180,7 @@ namespace winrt::ChatKeeper::implementation
             break;
         }
         BuildError().Message(message);
-        BuildRetry().Content(box_value(S(L"Build_TryAgain.Content")));
+        BuildRetry().Content(box_value(S(L"Build_TryAgain/Content")));
         BuildError().IsOpen(true);
         if (!result.details.empty())
         {
