@@ -84,6 +84,17 @@ jobs:
           cmake --build build --config Release
           ./build/Release/core-tests.exe
 
+      - name: Diagnose exporter launch
+        if: steps.exporter.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          python -c "import subprocess,sys; r=subprocess.run([r'exporter\wtsexporter.exe','--no-banner','-a','-k','f'*64,'-b','nope.crypt15'],capture_output=True,text=True,errors='replace'); print('python rc',r.returncode); print(r.stdout[-800:]); print(r.stderr[-1500:])"
+          ./build/Release/chatkeeper-cli.exe --exec exporter/wtsexporter.exe --version
+          ./build/Release/chatkeeper-cli.exe --exec exporter/wtsexporter.exe --no-banner -a -k ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -b nope.crypt15
+          $env:CK_NO_JOB = "1"
+          ./build/Release/chatkeeper-cli.exe --exec exporter/wtsexporter.exe --no-banner -a -k ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff -b nope.crypt15
+
       - name: End-to-end with the official wtsexporter.exe (Windows process runner, crypt15)
         if: steps.exporter.outcome == 'success'
         shell: pwsh

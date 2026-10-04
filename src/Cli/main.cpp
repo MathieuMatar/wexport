@@ -19,6 +19,7 @@
 #include "../Core/Device/FolderDeviceSource.h"
 #include "../Core/Device/WhatsAppLocator.h"
 #include "../Core/Pipeline/BuildArchive.h"
+#include "../Core/Exporter/ProcessRunner.h"
 #include "../Core/Pipeline/CopySession.h"
 #include "../Core/Util/FileSystem.h"
 #include "../Core/Util/Strings.h"
@@ -43,6 +44,22 @@ int wmain(int argc, wchar_t** wargv) {
 #else
 int main(int argc, char** argv) {
 #endif
+    // Diagnostic: chatkeeper-cli --exec <exe> [args...] runs a process exactly the way the app runs wtsexporter.
+    if (argc >= 3 && std::string(argv[1]) == "--exec") {
+        ProcessSpec spec;
+        spec.executable = fs::absolute(PathFromUtf8(argv[2]));
+        for (int i = 3; i < argc; ++i) spec.args.push_back(argv[i]);
+        spec.workingDirectory = fs::current_path();
+        spec.extraEnvironment = {{"PYTHONUTF8", "1"}, {"PYTHONIOENCODING", "utf-8"}};
+        std::size_t bytes = 0;
+        auto r = RunProcess(spec, CancelToken(), [&](std::string_view chunk) {
+            bytes += chunk.size();
+            std::cout << chunk;
+        });
+        std::cout << "\n[exec] exit=" << r.exitCode << " bytes=" << bytes << " startFailed=" << r.startFailed << " "
+                  << r.startError << std::endl;
+        return r.exitCode;
+    }
     std::map<std::string, std::string> a;
     for (int i = 1; i + 1 < argc; i += 2) a[argv[i]] = argv[i + 1];
     for (const char* req : {"--from", "--key-file", "--exporter", "--viewer"})
@@ -106,7 +123,8 @@ int main(int argc, char** argv) {
 
     BuildOptions bo;
     bo.exportDir = exportDir;
-    bo.exporterExe = fs::absolute(PathFromUtf8(a["--exporter"]));
+    bo.exporterExe = PathFromUtf8(a["--exporter"]);
+    if (bo.exporterExe.has_parent_path()) bo.exporterExe = fs::absolute(bo.exporterExe);
     bo.viewerHtml = PathFromUtf8(a["--viewer"]);
     bo.key = *key;
     SecureClear(*key);

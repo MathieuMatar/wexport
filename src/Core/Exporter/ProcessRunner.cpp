@@ -76,10 +76,15 @@ ProcessResult RunProcess(const ProcessSpec& spec, const CancelToken& cancel,
     Handle nul(CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, OPEN_EXISTING, 0, nullptr));
 
     // A job object so Cancel kills wtsexporter and anything it spawned.
-    Handle job(CreateJobObjectW(nullptr, nullptr));
-    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
-    limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-    SetInformationJobObject(job.h, JobObjectExtendedLimitInformation, &limits, sizeof limits);
+    // (CK_NO_JOB=1 turns it off, for diagnosing launch problems.)
+    wchar_t noJob[4] = {};
+    bool useJob = GetEnvironmentVariableW(L"CK_NO_JOB", noJob, 4) == 0;
+    Handle job(useJob ? CreateJobObjectW(nullptr, nullptr) : nullptr);
+    if (useJob) {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_BREAKAWAY_OK;
+        SetInformationJobObject(job.h, JobObjectExtendedLimitInformation, &limits, sizeof limits);
+    }
 
     STARTUPINFOW si{};
     si.cb = sizeof si;
@@ -103,7 +108,7 @@ ProcessResult RunProcess(const ProcessSpec& spec, const CancelToken& cancel,
         return result;
     }
     Handle process(pi.hProcess), thread(pi.hThread);
-    AssignProcessToJobObject(job.h, pi.hProcess);
+    if (useJob) AssignProcessToJobObject(job.h, pi.hProcess);
     ResumeThread(pi.hThread);
     hOutWrite.Close();
     hErrWrite.Close();
@@ -121,7 +126,8 @@ ProcessResult RunProcess(const ProcessSpec& spec, const CancelToken& cancel,
 
     while (WaitForSingleObject(pi.hProcess, 100) == WAIT_TIMEOUT) {
         if (cancel.IsCancelled()) {
-            TerminateJobObject(job.h, 1);
+            if (useJob) TerminateJobObject(job.h, 1);
+            else TerminateProcess(pi.hProcess, 1);
             result.cancelled = true;
             WaitForSingleObject(pi.hProcess, 5000);
             break;

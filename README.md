@@ -53,7 +53,7 @@ package is listed and imported explicitly; regenerate the project with
 cmake -S . -B build -G Ninja && cmake --build build && ./build/core-tests
 pip install "whatsapp-chat-exporter[crypt15]==0.13.0" pycryptodome
 (cd tests/viewer && npm install)
-python tests/e2e/run_e2e.py --cli build/chatkeeper-cli --exporter wtsexporter --viewer-check
+python tests/e2e/run_e2e.py --cli build/chatkeeper-cli --exporter "$(which wtsexporter)" --viewer-check
 ```
 
 `tests/fixtures/make_fixture.py` builds a phone-shaped `WhatsApp/` folder with
