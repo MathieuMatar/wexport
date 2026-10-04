@@ -46,6 +46,7 @@ private:
     Callback onStatus_;
     ExporterStatus status_;
     std::string pending_;
+    bool pendingCr_ = false;
     std::string full_;
     std::deque<std::string> tail_;
 };

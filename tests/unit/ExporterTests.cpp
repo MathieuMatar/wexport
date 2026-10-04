@@ -98,3 +98,17 @@ TEST(DetectsWrongKey) {
     CHECK(ClassifyExporterResult(6, "[ERROR] The message database does not exist.") ==
           ExporterFailure::MissingDatabase);
 }
+
+TEST(KeepsWindowsLineEndings) {
+    // Python on Windows writes \r\n; those are lines, not tqdm redraws.
+    ExporterOutputParser p;
+    std::string text = "usage: wtsexporter [-h]\r\nwtsexporter: error: unrecognized arguments: --x\r\n"
+                       "\rProcessing messages:   0%|          | 0/63 [00:00<?, ?msg/s]\r\r[INFO] Done line\r\n";
+    for (size_t i = 0; i < text.size(); ++i) p.Feed(std::string_view(text).substr(i, 1));
+    p.Finish();
+    std::string tail = p.Tail();
+    CHECK(tail.find("usage: wtsexporter") != std::string::npos);
+    CHECK(tail.find("unrecognized arguments") != std::string::npos);
+    CHECK(tail.find("Done line") != std::string::npos);
+    CHECK(tail.find("Processing messages") == std::string::npos);
+}

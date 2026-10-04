@@ -123,12 +123,21 @@ void ExporterOutputParser::Feed(std::string_view chunk) {
     full_.append(chunk);
     if (full_.size() > (8u << 20)) full_.erase(0, full_.size() - (4u << 20));
     for (char c : chunk) {
+        if (pendingCr_) {
+            pendingCr_ = false;
+            if (c == '\n') {  // CRLF (Windows) is a line end, not a tqdm redraw
+                Segment(pending_, true);
+                pending_.clear();
+                continue;
+            }
+            Segment(pending_, false);
+            pending_.clear();
+        }
         if (c == '\n') {
             Segment(pending_, true);
             pending_.clear();
         } else if (c == '\r') {
-            Segment(pending_, false);
-            pending_.clear();
+            pendingCr_ = true;
         } else {
             pending_ += c;
         }
@@ -136,6 +145,7 @@ void ExporterOutputParser::Feed(std::string_view chunk) {
 }
 
 void ExporterOutputParser::Finish() {
+    pendingCr_ = false;
     if (!pending_.empty()) Segment(pending_, true);
     pending_.clear();
 }
