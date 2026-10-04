@@ -22,8 +22,8 @@ struct ExporterOptions {
     std::string countryCode;  // digits only; used with the vcf
 };
 
-// Arguments after the executable. Never contains --check-update or -c, and
-// -k always has a value.
+// Arguments after the executable. Never contains --check-update or -c/-m, and
+// --key always has a value.
 std::vector<std::string> BuildExporterArgs(const ExporterOptions& options);
 
 // For logs: the same arguments with the key replaced.

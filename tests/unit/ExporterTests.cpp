@@ -22,7 +22,8 @@ TEST(ExporterArgsAreSafe) {
     ExporterOptions o;
     o.key = std::string(64, 'a');
     auto args = BuildExporterArgs(o);
-    CHECK(Has(args, "-a"));
+    CHECK(Has(args, "--android"));
+    for (const auto& x : args) CHECK(x != "-m" && x != "-c");  // the Nuitka build refuses "-m"
     CHECK(Has(args, "--no-banner"));
     CHECK(Has(args, "--no-html"));
     CHECK(!Has(args, "-c"));
@@ -30,11 +31,11 @@ TEST(ExporterArgsAreSafe) {
     CHECK(!Has(args, "--check-update"));
     CHECK(!Has(args, "--wab"));
     CHECK(!Has(args, "--enrich-from-vcards"));
-    auto k = std::find(args.begin(), args.end(), "-k");
+    auto k = std::find(args.begin(), args.end(), "--key");
     CHECK(k != args.end() && k + 1 != args.end() && *(k + 1) == o.key);
-    auto m = std::find(args.begin(), args.end(), "-m");
+    auto m = std::find(args.begin(), args.end(), "--media");
     CHECK(*(m + 1) == "WhatsApp");
-    auto out = std::find(args.begin(), args.end(), "-o");
+    auto out = std::find(args.begin(), args.end(), "--output");
     CHECK(*(out + 1) == ".");
     CHECK(DescribeExporterArgs(args).find(o.key) == std::string::npos);
 

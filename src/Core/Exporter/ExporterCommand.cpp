@@ -17,14 +17,18 @@ std::string Native(const char* forwardSlashPath) {
 }
 }  // namespace
 
+// Long option names only: the official Windows build (Nuitka) refuses to run
+// when its command line contains "-m" ("the program tried to call itself with
+// '-m' argument"), so "-m WhatsApp" must be written "--media WhatsApp".
 std::vector<std::string> BuildExporterArgs(const ExporterOptions& o) {
-    std::vector<std::string> a = {"-a", "--no-banner", "-k", o.key, "-b", Native("_work/msgstore.db.crypt15")};
+    std::vector<std::string> a = {"--android", "--no-banner", "--key", o.key, "--backup",
+                                  Native("_work/msgstore.db.crypt15")};
     if (o.hasContactsBackup) {
         a.push_back("--wab");
         a.push_back(Native("_work/wa.db.crypt15"));
     }
-    a.insert(a.end(), {"-d", Native(kMessagesDb), "-w", Native(kContactsDb), "-m", "WhatsApp", "-o", ".", "-j",
-                       Native(kChatsJson), "--no-html"});
+    a.insert(a.end(), {"--db", Native(kMessagesDb), "--wa", Native(kContactsDb), "--media", "WhatsApp", "--output",
+                       ".", "--json", Native(kChatsJson), "--no-html"});
     if (o.vcf && !o.countryCode.empty()) {
         a.push_back("--enrich-from-vcards");
         a.push_back(PathToUtf8(*o.vcf));
