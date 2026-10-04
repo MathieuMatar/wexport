@@ -2,6 +2,7 @@
 
 #include "MainWindow.g.h"
 
+#include "Core/Copy/Copier.h"
 #include "Core/Copy/CopyPlan.h"
 #include "Core/Device/IDeviceSource.h"
 #include "Core/Device/WhatsAppLocator.h"

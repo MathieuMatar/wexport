@@ -1,5 +1,6 @@
 #include "ProcessRunner.h"
 
+#include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <thread>

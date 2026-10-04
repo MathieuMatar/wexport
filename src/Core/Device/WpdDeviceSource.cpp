@@ -12,6 +12,7 @@
 #include <wrl/client.h>
 
 #include <algorithm>
+#include <initializer_list>
 #include <cstdio>
 
 #include "../Util/Strings.h"
@@ -48,7 +49,7 @@ bool IsDisconnectError(HRESULT hr) {
     return hr == HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED) || hr == HRESULT_FROM_WIN32(ERROR_GEN_FAILURE) ||
            hr == HRESULT_FROM_WIN32(ERROR_NOT_READY) || hr == HRESULT_FROM_WIN32(ERROR_SEM_TIMEOUT) ||
            hr == HRESULT_FROM_WIN32(ERROR_DEVICE_REMOVED) || hr == HRESULT_FROM_WIN32(ERROR_NO_SUCH_DEVICE) ||
-           hr == HRESULT_FROM_WIN32(ERROR_INVALID_HANDLE) || hr == E_WPD_DEVICE_NOT_OPEN ||
+           hr == HRESULT_FROM_WIN32(ERROR_INVALID_HANDLE) ||
            hr == HRESULT_FROM_WIN32(ERROR_BAD_COMMAND) || hr == RPC_E_DISCONNECTED;
 }
 
@@ -141,7 +142,9 @@ std::int64_t VariantDateToUnix(const PROPVARIANT& v) {
     if (!TzSpecificLocalTimeToSystemTime(nullptr, &local, &utc)) utc = local;
     FILETIME ft{};
     if (!SystemTimeToFileTime(&utc, &ft)) return 0;
-    ULARGE_INTEGER t{ft.dwLowDateTime, ft.dwHighDateTime};
+    ULARGE_INTEGER t;
+    t.LowPart = ft.dwLowDateTime;
+    t.HighPart = ft.dwHighDateTime;
     return static_cast<std::int64_t>((t.QuadPart - 116444736000000000ull) / 10000000ull);
 }
 

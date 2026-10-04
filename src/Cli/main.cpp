@@ -13,6 +13,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "../Core/Archive/ExportFolder.h"
 #include "../Core/Device/FolderDeviceSource.h"
@@ -35,14 +36,20 @@ int Usage() {
 
 }  // namespace
 
+#ifdef _WIN32
+int wmain(int argc, wchar_t** wargv) {
+    std::vector<std::string> argv;
+    for (int i = 0; i < argc; ++i) argv.push_back(ToUtf8(wargv[i]));
+#else
 int main(int argc, char** argv) {
+#endif
     std::map<std::string, std::string> a;
     for (int i = 1; i + 1 < argc; i += 2) a[argv[i]] = argv[i + 1];
     for (const char* req : {"--from", "--key-file", "--exporter", "--viewer"})
         if (!a.count(req)) return Usage();
     if (!a.count("--out") && !a.count("--export-dir")) return Usage();
 
-    std::ifstream kf(a["--key-file"]);
+    std::ifstream kf(PathFromUtf8(a["--key-file"]));
     std::stringstream ks;
     ks << kf.rdbuf();
     auto key = NormalizeKey(Trim(ks.str()));

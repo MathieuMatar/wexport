@@ -39,7 +39,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, windows-latest]
+        # windows-latest (VS 2026) lacks the UWP C++ tools that WinUI C++ projects need.
+        os: [windows-2022]
     runs-on: ${{ matrix.os }}
     env:
       VCPKG_ROOT: C:\vcpkg
