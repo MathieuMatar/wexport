@@ -160,23 +160,29 @@ TEST(NewestCrypt15Wins) {
 TEST(CopyPlanOrderAndSkips) {
     auto phone = t::TempDir("phone-plan");
     MakePhone(phone, "WhatsApp");
+#ifndef _WIN32
+    // A name the phone allows but Windows doesn't (can't even create it as a fixture on Windows).
     WriteFile(phone / "WhatsApp/Media/WhatsApp Documents/what?.pdf", "q");
+    const std::size_t odd = 1;
+#else
+    const std::size_t odd = 0;
+#endif
     FolderDeviceSource src(phone);
     auto f = FindWhatsAppFolders(src)[0];
     auto plan = BuildCopyPlan(src, InspectBackup(src, f), CancelToken());
     CHECK_EQ(plan.items[0].destPath, std::string("_work/msgstore.db.crypt15"));
     CHECK_EQ(plan.items[1].destPath, std::string("_work/wa.db.crypt15"));
     CHECK(plan.hasContactsBackup);
-    CHECK_EQ(plan.items.size(), 2u + 4u);
+    CHECK_EQ(plan.items.size(), 2u + 3u + odd);
     for (const auto& i : plan.items) {
         CHECK(i.destPath.find(".Statuses") == std::string::npos);
         CHECK(i.destPath.find(".nomedia") == std::string::npos);
         CHECK(i.destPath.find("accounts") == std::string::npos);
         CHECK(i.destPath.find("stickers.db") == std::string::npos);
     }
-    CHECK_EQ(plan.totalBytes, 300u + 200u + 5000u + 3000u + 3u + 1u);
-    CHECK_EQ(plan.renamed.size(), 1u);
-    CHECK_EQ(plan.renamed[0].savedAs, std::string("WhatsApp/Media/WhatsApp Documents/what_.pdf"));
+    CHECK_EQ(plan.totalBytes, 300u + 200u + 5000u + 3000u + 3u + odd);
+    CHECK_EQ(plan.renamed.size(), odd);
+    if (odd) CHECK_EQ(plan.renamed[0].savedAs, std::string("WhatsApp/Media/WhatsApp Documents/what_.pdf"));
 }
 
 TEST(CopyResumesBySize) {
