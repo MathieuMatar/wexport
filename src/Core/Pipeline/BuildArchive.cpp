@@ -2,6 +2,7 @@
 
 #include "../Archive/ExportFolder.h"
 #include "../Archive/MembersBuilder.h"
+#include "../Archive/VcardWorkaround.h"
 #include "../Copy/CopyPlan.h"
 #include "../Exporter/ExporterCommand.h"
 #include "../Exporter/ProcessRunner.h"
@@ -59,50 +60,88 @@ BuildResult RunBuild(BuildOptions o, const CancelToken& cancel,
         return fail(BuildResult::Status::BuildFailed, "Could not prepare the media folder.", *err);
     fs::remove(LongPath(dir / PathFromUtf8(kChatsJson)), ec);
 
-    // 1-2. Unlock and read (one wtsexporter run).
+    // 1-2. Unlock and read. Normally one wtsexporter run; if it hits its
+    // contact-card crash, run it again on a patched copy of the database it
+    // just decrypted (see VcardWorkaround.h).
+    struct Run {
+        ProcessResult process;
+        ExporterFailure failure = ExporterFailure::Other;
+        std::string tail;
+    };
+    auto runExporter = [&](const ExporterOptions& eo) {
+        Run run;
+        std::error_code e;
+        fs::remove(LongPath(dir / PathFromUtf8(kChatsJson)), e);
+        ProcessSpec spec;
+        spec.executable = o.exporterExe;
+        spec.args = BuildExporterArgs(eo);
+        spec.workingDirectory = dir;
+        spec.extraEnvironment = {{"PYTHONUTF8", "1"}, {"PYTHONIOENCODING", "utf-8"}};
+        log.Info("Running " + DescribeExporterArgs(spec.args));
+        ExporterOutputParser parser([&](const ExporterStatus& st) {
+            bool reading = st.stage != ExporterStage::Starting && st.stage != ExporterStage::Decrypting;
+            progress(reading ? BuildStage::Reading : BuildStage::Unlocking, st.fraction, st.line);
+        });
+        run.process = RunProcess(spec, cancel, [&](std::string_view chunk) { parser.Feed(chunk); });
+        for (auto& a : spec.args) SecureClear(a);
+        parser.Finish();
+        log.Info("Exporter output:\n" + parser.Tail(200));
+        log.Info("Exporter exit code " + std::to_string(run.process.exitCode));
+        run.failure = ClassifyExporterResult(run.process.exitCode, parser.FullText());
+        run.tail = parser.Tail() + "(exit code " + std::to_string(run.process.exitCode) + ")";
+        return run;
+    };
+
     progress(BuildStage::Unlocking, std::nullopt, "");
     ExporterOptions eo;
     eo.key = o.key;
     eo.hasContactsBackup = Exists(dir / PathFromUtf8(kContactsBackup));
     eo.vcf = o.vcf;
     eo.countryCode = o.countryCode;
-    ProcessSpec spec;
-    spec.executable = o.exporterExe;
-    spec.args = BuildExporterArgs(eo);
+    Run run = runExporter(eo);
     SecureClear(eo.key);
-    spec.workingDirectory = dir;
-    spec.extraEnvironment = {{"PYTHONUTF8", "1"}, {"PYTHONIOENCODING", "utf-8"}};
-    log.Info("Running " + DescribeExporterArgs(spec.args));
 
-    ExporterOutputParser parser([&](const ExporterStatus& st) {
-        bool reading = st.stage != ExporterStage::Starting && st.stage != ExporterStage::Decrypting;
-        progress(reading ? BuildStage::Reading : BuildStage::Unlocking, st.fraction, st.line);
-    });
-    ProcessResult pr = RunProcess(spec, cancel, [&](std::string_view chunk) { parser.Feed(chunk); });
-    for (auto& a : spec.args) SecureClear(a);
-    parser.Finish();
-    log.Info("Exporter output:\n" + parser.Tail(200));
-    log.Info("Exporter exit code " + std::to_string(pr.exitCode));
+    for (auto level : {VcardWorkaroundLevel::LidChats, VcardWorkaroundLevel::All}) {
+        if (run.failure != ExporterFailure::VcardChatMissing || run.process.cancelled || cancel.IsCancelled()) break;
+        if (!Exists(dir / PathFromUtf8(kMessagesDb))) break;
+        log.Warn(level == VcardWorkaroundLevel::LidChats
+                     ? "The exporter crashed on a contact card in a chat known by a privacy ID (a wtsexporter bug). "
+                       "Retrying on a copy of the database without those contact cards."
+                     : "Still crashing on contact cards. Retrying on a copy without any contact cards.");
+        progress(BuildStage::Reading, std::nullopt, "Working around a problem in the exporter");
+        auto patched = MakeVcardWorkaroundDb(dir / PathFromUtf8(kMessagesDb), dir / PathFromUtf8(kWorkaroundDb), level);
+        if (!patched.ok) {
+            log.Warn("Workaround not possible: " + patched.error);
+            break;
+        }
+        log.Info("Contact cards left out of the copy: " + std::to_string(patched.removed) +
+                 " (their messages keep the contact's name; data\\msgstore.db is unchanged)");
+        r.contactCardsSkipped = patched.removed;
+        ExporterOptions again = eo;
+        again.decryptedDb = kWorkaroundDb;
+        run = runExporter(again);
+    }
 
-    if (pr.cancelled || cancel.IsCancelled()) return fail(BuildResult::Status::Cancelled, "Cancelled.");
-    if (pr.startFailed)
-        return fail(BuildResult::Status::ExporterFailed, "The exporter could not be started.", pr.startError);
-    std::string tail = parser.Tail() + "(exit code " + std::to_string(pr.exitCode) + ")";
-    switch (ClassifyExporterResult(pr.exitCode, parser.FullText())) {
+    if (run.process.cancelled || cancel.IsCancelled()) return fail(BuildResult::Status::Cancelled, "Cancelled.");
+    if (run.process.startFailed)
+        return fail(BuildResult::Status::ExporterFailed, "The exporter could not be started.",
+                    run.process.startError);
+    switch (run.failure) {
         case ExporterFailure::None:
             break;
         case ExporterFailure::WrongKey:
             return fail(BuildResult::Status::WrongKey,
-                        "That key doesn't open this backup. Check for typos and try again.", tail);
+                        "That key doesn't open this backup. Check for typos and try again.", run.tail);
         case ExporterFailure::NotABackup:
             return fail(BuildResult::Status::ExporterFailed,
-                        "The backup file looks damaged or incomplete. Make a fresh backup and copy it again.", tail);
+                        "The backup file looks damaged or incomplete. Make a fresh backup and copy it again.",
+                        run.tail);
         default:
-            return fail(BuildResult::Status::ExporterFailed, "Something went wrong while reading your backup.", tail);
+            return fail(BuildResult::Status::ExporterFailed, "Something went wrong while reading your backup.",
+                        run.tail);
     }
     if (!Exists(dir / PathFromUtf8(kChatsJson)))
-        return fail(BuildResult::Status::ExporterFailed, "The exporter finished but wrote no messages.",
-                    parser.Tail());
+        return fail(BuildResult::Status::ExporterFailed, "The exporter finished but wrote no messages.", run.tail);
 
     // 3. Build the archive.
     progress(BuildStage::Building, std::nullopt, "Writing chats.js");

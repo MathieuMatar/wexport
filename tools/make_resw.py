@@ -28,6 +28,8 @@ S = {
     "Welcome_Private.Message": "Nothing is uploaded. The app doesn't use the internet at all.",
     "Welcome_Start.Content": "Start",
     "Welcome_AlreadyCopied.Content": "I already copied the WhatsApp folder to this PC",
+    "Welcome_Continue.Content": "Continue an unfinished export (no copying from the phone)",
+    "Welcome_NotExport": "That folder isn't an unfinished export. Choose the \u201cWhatsApp Export \u2026\u201d folder this app created earlier (it has a _work folder inside).",
     "Welcome_NoFolder": "That folder doesn't look like a WhatsApp folder. Choose the folder named “WhatsApp” (it contains Databases and Media).",
 
     "Guide_Title.Text": "Step 1: Get your key (on the phone)",
@@ -143,6 +145,7 @@ S = {
     "Done_Media": "{0} photos · {1} videos · {2} voice notes and audio · {3} documents · {4} stickers",
     "Done_Calls": "{0} calls",
     "Done_Missing": "{0} media files were no longer on the phone",
+    "Done_CardsSkipped": "{0} shared contact cards are shown as the contact's name only (to work around a problem in the exporter)",
     "Done_Size": "Folder size: {0} · {1}",
 
     "Dialog_Ok": "OK",

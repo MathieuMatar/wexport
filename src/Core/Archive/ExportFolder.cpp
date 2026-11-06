@@ -93,6 +93,16 @@ std::optional<std::string> MoveMediaForViewer(const fs::path& dir, Logger* log) 
     return std::nullopt;
 }
 
+ExistingExport InspectExportFolder(const fs::path& dir) {
+    ExistingExport e;
+    std::error_code ec;
+    e.hasMessagesBackup = fs::is_regular_file(LongPath(dir / PathFromUtf8(kMessagesBackup)), ec);
+    e.hasContactsBackup = fs::is_regular_file(LongPath(dir / PathFromUtf8(kContactsBackup)), ec);
+    e.hasMedia = IsDir(dir / PathFromUtf8(kExporterMediaDir)) || IsDir(dir / kViewerMediaDir);
+    e.finished = fs::is_regular_file(LongPath(dir / kIndexHtml), ec) && fs::is_regular_file(LongPath(dir / kChatsJs), ec);
+    return e;
+}
+
 std::optional<std::string> CopyViewer(const fs::path& viewerHtml, const fs::path& dir) {
     std::error_code ec;
     fs::copy_file(LongPath(viewerHtml), LongPath(dir / kIndexHtml), fs::copy_options::overwrite_existing, ec);

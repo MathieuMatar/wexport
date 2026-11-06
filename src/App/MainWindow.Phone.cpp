@@ -251,6 +251,7 @@ namespace winrt::ChatKeeper::implementation
             co_return;
         }
         m_state.fromFolder = true;
+        m_state.resumed = false;
         m_state.source = source;
         m_state.phoneName = "";
         m_state.folders = folders;

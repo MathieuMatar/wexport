@@ -169,6 +169,8 @@ ExporterFailure ClassifyExporterResult(int exitCode, std::string_view output) {
     if (has("not a valid compressed stream") || has("not a SQLite database") || has("must be at least 131 bytes"))
         return ExporterFailure::NotABackup;
     if (has("The message database does not exist")) return ExporterFailure::MissingDatabase;
+    if (exitCode != 0 && has("_process_vcard_row") && has("has no attribute 'get_message'"))
+        return ExporterFailure::VcardChatMissing;
     if (exitCode == 0 && has("Everything is done")) return ExporterFailure::None;
     if (exitCode == 0) return ExporterFailure::None;
     if (has("Traceback (most recent call last)")) return ExporterFailure::Crashed;

@@ -51,7 +51,18 @@ private:
     std::deque<std::string> tail_;
 };
 
-enum class ExporterFailure { None, WrongKey, NotABackup, MissingDatabase, Crashed, Other };
+enum class ExporterFailure {
+    None,
+    WrongKey,
+    NotABackup,
+    MissingDatabase,
+    // wtsexporter 0.13.x crashes in _process_vcard_row when a shared contact
+    // card is in a chat WhatsApp knows by a privacy ID (LID): its vCard query
+    // doesn't map the LID to the phone number its message query used.
+    VcardChatMissing,
+    Crashed,
+    Other
+};
 
 ExporterFailure ClassifyExporterResult(int exitCode, std::string_view output);
 

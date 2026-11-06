@@ -40,6 +40,10 @@ def check(cond, msg):
     print("ok:", msg)
 
 
+def log_text(export):
+    return open(os.path.join(export, "export-log.txt"), encoding="utf-8").read()
+
+
 def tree(d):
     out = set()
     for base, dirs, files in os.walk(d):
@@ -61,7 +65,7 @@ def main():
     shutil.rmtree(fx, ignore_errors=True)
     r = run([sys.executable, os.path.join(ROOT, "tests", "fixtures", "make_fixture.py"), fx, "--messages", "2000"])
     check(r.returncode == 0, "fixture built " + r.stderr[-300:])
-    export = os.path.join(work, "WhatsApp Export Test Phone 2026-10-04 23-31")
+    export = os.path.join(work, "WhatsApp Export thomas's A23 2026-11-06 19-26")
     shutil.rmtree(export, ignore_errors=True)
     EXPORT_LOG.append(os.path.join(export, "export-log.txt"))
     wrong = os.path.join(work, "wrong.txt")
@@ -93,6 +97,8 @@ def main():
         "media/WhatsApp Images/IMG-20260101-WA0001.jpg", "media/WhatsApp Images/Sent/IMG-20260101-WA0003.jpg",
         "media/WhatsApp Voice Notes/202601/PTT-20260101-WA0002.opus", "media/WhatsApp Documents/Report été.pdf",
         "media/WhatsApp Stickers/STK-20260101-WA0004.webp",
+        # Written by wtsexporter just before its contact-card crash; kept with the databases.
+        "data/vCards/Mum.vcf",
     }
     check(files == expected, "final layout matches the spec: extra=%s missing=%s" % (sorted(files - expected), sorted(expected - files)))
     with open(os.path.join(ROOT, "viewer", "index.html"), "rb") as f1, open(os.path.join(export, "index.html"), "rb") as f2:
@@ -103,6 +109,11 @@ def main():
     check(len(data["96172222222@s.whatsapp.net"]["messages"]) == 2001, "all messages present")
     img = data["96171111111@s.whatsapp.net"]["messages"]["4"]["data"].replace("\\", "/")
     check("WhatsApp/Media/WhatsApp Images/IMG-20260101-WA0001.jpg" in img, "media path resolvable by the viewer")
+    dan = data.get("96174444444@s.whatsapp.net", {}).get("messages", {})
+    texts = [m.get("data") for m in dan.values()]
+    check("Hi, it's Dan" in texts and "Mum" in texts,
+          "chat known by a privacy ID exported, its contact-card message kept as text (workaround)")
+    check("Contact cards left out of the copy: 1" in log_text(export), "vCard workaround logged")
     members = open(os.path.join(export, "members.js"), encoding="utf-8").read()
     check(members.startswith("window.GROUP_MEMBERS = ") and '"Alice From VCF"' in members, "members.js built with vcf names")
     log = open(os.path.join(export, "export-log.txt"), encoding="utf-8").read()
@@ -110,7 +121,7 @@ def main():
     for line in r.stdout.splitlines():
         if line.startswith("chats="):
             print("summary:", line)
-            check("chats=3" in line and "groups=1" in line and "calls=2" in line and "missing=1" in line, "summary counts")
+            check("chats=4" in line and "groups=1" in line and "calls=2" in line and "missing=1" in line, "summary counts")
 
     # 3. Viewer
     if a.viewer_check:

@@ -27,6 +27,16 @@ std::optional<std::string> EnsureMediaForExporter(const std::filesystem::path& e
 // data\, and the then-empty WhatsApp\ folder is removed.
 std::optional<std::string> MoveMediaForViewer(const std::filesystem::path& exportDir, Logger* log);
 
+// What an existing export folder holds, for "Continue an unfinished export".
+struct ExistingExport {
+    bool hasMessagesBackup = false;  // _work\msgstore.db.crypt15
+    bool hasContactsBackup = false;  // _work\wa.db.crypt15
+    bool hasMedia = false;           // WhatsApp\Media or media
+    bool finished = false;           // index.html and chats.js already there
+    bool CanContinue() const { return hasMessagesBackup; }
+};
+ExistingExport InspectExportFolder(const std::filesystem::path& exportDir);
+
 // Copies the supplied viewer unchanged.
 std::optional<std::string> CopyViewer(const std::filesystem::path& viewerHtml, const std::filesystem::path& exportDir);
 

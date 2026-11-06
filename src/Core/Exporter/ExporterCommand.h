@@ -16,7 +16,10 @@ inline constexpr const char* kMessagesDb = "data/msgstore.db";
 inline constexpr const char* kContactsDb = "data/wa.db";
 
 struct ExporterOptions {
-    std::string key;  // 64 hex digits
+    std::string key;  // 64 hex digits; unused when decryptedDb is set
+    // Run on an already-decrypted message database instead of the backup
+    // (export-folder relative, e.g. "_work/msgstore-export.db"). No key is passed.
+    std::optional<std::string> decryptedDb;
     bool hasContactsBackup = false;
     std::optional<std::filesystem::path> vcf;
     std::string countryCode;  // digits only; used with the vcf

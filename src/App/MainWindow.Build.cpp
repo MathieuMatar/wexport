@@ -201,6 +201,8 @@ namespace winrt::ChatKeeper::implementation
         summary += SF(L"Done_Media", { n(s.photos), n(s.videos), n(s.audio), n(s.documents), n(s.stickers) }) + L"\n";
         summary += SF(L"Done_Calls", { n(s.calls) }) + L"\n";
         if (s.missingMedia) summary += SF(L"Done_Missing", { n(s.missingMedia) }) + L"\n";
+        if (r.contactCardsSkipped > 0)
+            summary += SF(L"Done_CardsSkipped", { n(static_cast<std::uint64_t>(r.contactCardsSkipped)) }) + L"\n";
         summary += SF(L"Done_Size", { W(ck::FormatBytes(r.folderBytes)), m_state.exportDir.native() });
         DoneSummary().Text(summary);
         UpdateNavigation();

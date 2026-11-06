@@ -22,6 +22,7 @@ namespace winrt::ChatKeeper::implementation
         // Where the data comes from (a phone over WPD, or a folder on this PC).
         std::shared_ptr<ck::IDeviceSource> source;
         bool fromFolder = false;
+        bool resumed = false;  // "Continue an unfinished export": already copied, skip to contacts
         std::vector<ck::WhatsAppFolder> folders;  // WhatsApp and/or WhatsApp Business
         std::optional<ck::WhatsAppFolder> folder;
         ck::BackupInfo backup;
@@ -53,6 +54,7 @@ namespace winrt::ChatKeeper::implementation
         // Step 0
         void OnStart(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
         winrt::fire_and_forget OnAlreadyCopied(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
+        winrt::fire_and_forget OnContinueExport(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
 
         // Step 2
         void OnPhoneYes(IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
@@ -89,6 +91,7 @@ namespace winrt::ChatKeeper::implementation
     private:
         // MainWindow.xaml.cpp: shell, navigation, helpers
         void SetUpWindow();
+        bool ContinueExport(std::filesystem::path const& exportDir);
         void BuildStepIndicator();
         void GoTo(Step step);
         void UpdateNavigation();

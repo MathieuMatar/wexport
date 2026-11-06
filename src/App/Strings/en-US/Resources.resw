@@ -101,6 +101,12 @@
   <data name="Welcome_AlreadyCopied.Content" xml:space="preserve">
     <value>I already copied the WhatsApp folder to this PC</value>
   </data>
+  <data name="Welcome_Continue.Content" xml:space="preserve">
+    <value>Continue an unfinished export (no copying from the phone)</value>
+  </data>
+  <data name="Welcome_NotExport" xml:space="preserve">
+    <value>That folder isn't an unfinished export. Choose the “WhatsApp Export …” folder this app created earlier (it has a _work folder inside).</value>
+  </data>
   <data name="Welcome_NoFolder" xml:space="preserve">
     <value>That folder doesn't look like a WhatsApp folder. Choose the folder named “WhatsApp” (it contains Databases and Media).</value>
   </data>
@@ -433,6 +439,9 @@ Then find the .vcf file on the phone:</value>
   </data>
   <data name="Done_Missing" xml:space="preserve">
     <value>{0} media files were no longer on the phone</value>
+  </data>
+  <data name="Done_CardsSkipped" xml:space="preserve">
+    <value>{0} shared contact cards are shown as the contact's name only (to work around a problem in the exporter)</value>
   </data>
   <data name="Done_Size" xml:space="preserve">
     <value>Folder size: {0} · {1}</value>

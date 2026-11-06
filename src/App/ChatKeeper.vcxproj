@@ -129,6 +129,7 @@
     <ClInclude Include="..\Core\Archive\ChatsJsWriter.h" />
     <ClInclude Include="..\Core\Archive\ExportFolder.h" />
     <ClInclude Include="..\Core\Archive\MembersBuilder.h" />
+    <ClInclude Include="..\Core\Archive\VcardWorkaround.h" />
     <ClInclude Include="..\Core\Archive\Vcf.h" />
     <ClInclude Include="..\Core\Copy\Copier.h" />
     <ClInclude Include="..\Core\Copy\CopyPlan.h" />
@@ -185,6 +186,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Core\Archive\MembersBuilder.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Core\Archive\VcardWorkaround.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Core\Archive\Vcf.cpp">

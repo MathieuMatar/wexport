@@ -38,6 +38,7 @@ struct BuildResult {
     ArchiveStats stats;
     std::uint64_t folderBytes = 0;
     bool membersWritten = false;
+    long long contactCardsSkipped = 0;  // vCard workaround (see VcardWorkaround.h)
 };
 
 BuildResult RunBuild(BuildOptions options, const CancelToken& cancel,

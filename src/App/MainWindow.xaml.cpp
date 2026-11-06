@@ -6,6 +6,7 @@
 #endif
 
 #include "AppInfo.h"
+#include "Core/Archive/ExportFolder.h"
 #include "Core/Util/FileSystem.h"
 #include "Core/Util/Strings.h"
 
@@ -199,7 +200,7 @@ namespace winrt::ChatKeeper::implementation
         case Step::KeyGuide: GoTo(Step::Welcome); break;
         case Step::Phone: GoTo(Step::KeyGuide); break;
         case Step::Copy: GoTo(m_state.fromFolder ? Step::Welcome : Step::Phone); break;
-        case Step::Contacts: GoTo(Step::Copy); break;
+        case Step::Contacts: GoTo(m_state.resumed ? Step::Welcome : Step::Copy); break;
         case Step::Key: GoTo(Step::Contacts); break;
         case Step::Build: GoTo(Step::Key); break;
         default: break;
@@ -234,6 +235,7 @@ namespace winrt::ChatKeeper::implementation
     void MainWindow::OnStart(IInspectable const&, RoutedEventArgs const&)
     {
         m_state.fromFolder = false;
+        m_state.resumed = false;
         GoTo(Step::KeyGuide);
     }
 
@@ -243,7 +245,50 @@ namespace winrt::ChatKeeper::implementation
         WelcomeError().IsOpen(false);
         auto folder = co_await PickFolder();
         if (!folder) co_return;
-        UseFolder(fs::path(std::wstring(folder.Path())));
+        fs::path path(std::wstring(folder.Path()));
+        // An export folder the app made earlier: continue it instead of copying again.
+        if (ck::InspectExportFolder(path).CanContinue())
+        {
+            ContinueExport(path);
+            co_return;
+        }
+        UseFolder(path);
+    }
+
+    winrt::fire_and_forget MainWindow::OnContinueExport(IInspectable const&, RoutedEventArgs const&)
+    {
+        auto strong = get_strong();
+        WelcomeError().IsOpen(false);
+        auto folder = co_await PickFolder();
+        if (!folder) co_return;
+        ContinueExport(fs::path(std::wstring(folder.Path())));
+    }
+
+    // Picks up an export folder from an earlier run (the copy finished, the
+    // build didn't): nothing is copied again; the phone isn't needed.
+    bool MainWindow::ContinueExport(fs::path const& exportDir)
+    {
+        auto existing = ck::InspectExportFolder(exportDir);
+        if (!existing.CanContinue())
+        {
+            WelcomeError().Message(S(L"Welcome_NotExport"));
+            WelcomeError().IsOpen(true);
+            return false;
+        }
+        m_state.fromFolder = true;
+        m_state.resumed = true;
+        m_state.source.reset();
+        m_state.folder.reset();
+        m_state.folders.clear();
+        m_state.exportDir = exportDir;
+        m_state.saveLocation = exportDir.parent_path();
+        m_state.copied = true;
+        m_state.result = {};
+        m_state.log->Open(exportDir / ck::kLogFile);
+        m_state.log->Info("Continuing an unfinished export in " + ck::PathToUtf8(exportDir) +
+                          (existing.hasMedia ? "" : " (no media folder found)"));
+        GoTo(Step::Contacts);
+        return true;
     }
 
     Windows::Foundation::IAsyncOperation<Windows::Storage::StorageFolder> MainWindow::PickFolder()

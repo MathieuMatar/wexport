@@ -7,6 +7,7 @@
 #include "Core/Archive/ExportFolder.h"
 #include "Core/Archive/MembersBuilder.h"
 #include "Core/Archive/Vcf.h"
+#include "Core/Archive/VcardWorkaround.h"
 #include "Core/Copy/Copier.h"
 #include "Test.h"
 
@@ -325,4 +326,43 @@ TEST(CleanupAfterFailureKeepsCopiedData) {
     CHECK(!fs::exists(dir / "chats.js.partial"));
     CHECK(!fs::exists(dir / "members.js"));
     CHECK(!fs::exists(dir / "WhatsApp/Media/WhatsApp Images/b.jpg.partial"));
+}
+
+TEST(VcardWorkaroundCopy) {
+    auto dir = t::TempDir("vcard-workaround");
+    fs::path db = dir / "msgstore.db";
+    Exec(db, R"(
+        CREATE TABLE jid (_id INTEGER PRIMARY KEY, user TEXT, server TEXT, raw_string TEXT);
+        CREATE TABLE jid_map (lid_row_id INTEGER PRIMARY KEY, jid_row_id INTEGER);
+        CREATE TABLE chat (_id INTEGER PRIMARY KEY, jid_row_id INTEGER);
+        CREATE TABLE message (_id INTEGER PRIMARY KEY, chat_row_id INTEGER, text_data TEXT);
+        CREATE TABLE message_vcard (_id INTEGER PRIMARY KEY, message_row_id INTEGER, vcard TEXT);
+        INSERT INTO jid VALUES (1, '777', 'lid', '777@lid'), (2, '961', 's.whatsapp.net', '961@s.whatsapp.net'),
+                               (3, '962', 's.whatsapp.net', '962@s.whatsapp.net');
+        INSERT INTO jid_map VALUES (1, 2);
+        INSERT INTO chat VALUES (10, 1), (11, 3);
+        INSERT INTO message VALUES (100, 10, 'Mum'), (101, 11, 'Dad');
+        INSERT INTO message_vcard VALUES (1, 100, 'BEGIN:VCARD'), (2, 101, 'BEGIN:VCARD');
+    )");
+    auto before = ReadFile(db);
+    auto r = MakeVcardWorkaroundDb(db, dir / "_work" / "copy.db", VcardWorkaroundLevel::LidChats);
+    CHECK(r.ok);
+    CHECK_EQ(r.removed, 1LL);  // only the card in the LID chat
+    CHECK(ReadFile(db) == before);  // original untouched
+    auto all = MakeVcardWorkaroundDb(db, dir / "_work" / "copy.db", VcardWorkaroundLevel::All);
+    CHECK(all.ok);
+    CHECK_EQ(all.removed, 2LL);
+    CHECK(!MakeVcardWorkaroundDb(dir / "missing.db", dir / "x.db", VcardWorkaroundLevel::All).ok);
+}
+
+TEST(InspectsUnfinishedExport) {
+    auto dir = t::TempDir("inspect-export");
+    CHECK(!InspectExportFolder(dir).CanContinue());
+    WriteFile(dir / "_work/msgstore.db.crypt15", "x");
+    WriteFile(dir / "WhatsApp/Media/WhatsApp Images/a.jpg", "a");
+    auto e = InspectExportFolder(dir);
+    CHECK(e.CanContinue());
+    CHECK(e.hasMedia);
+    CHECK(!e.hasContactsBackup);
+    CHECK(!e.finished);
 }

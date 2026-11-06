@@ -113,3 +113,27 @@ TEST(KeepsWindowsLineEndings) {
     CHECK(tail.find("Done line") != std::string::npos);
     CHECK(tail.find("Processing messages") == std::string::npos);
 }
+
+TEST(ExporterArgsOnDecryptedCopy) {
+    ExporterOptions o;
+    o.key = std::string(64, 'a');
+    o.hasContactsBackup = true;
+    o.decryptedDb = "_work/msgstore-export.db";
+    auto args = BuildExporterArgs(o);
+    CHECK(!Has(args, "--key"));
+    CHECK(!Has(args, "--backup"));
+    CHECK(!Has(args, "--wab"));
+    CHECK(!Has(args, o.key));
+    auto db = std::find(args.begin(), args.end(), "--db");
+    CHECK(db != args.end() && (db + 1)->find("msgstore-export.db") != std::string::npos);
+    CHECK(Has(args, "--wa"));
+}
+
+TEST(DetectsVcardCrash) {
+    // As reported from a real phone with wtsexporter_win_x64.exe 0.13.0.
+    std::string out =
+        "[INFO] Processed 96354 media in 8 seconds\r\nTraceback (most recent call last):\r\n"
+        "  File \"...\\Whatsapp_Chat_Exporter\\android_handler.py\", line 922, in _process_vcard_row\r\n"
+        "AttributeError: 'NoneType' object has no attribute 'get_message'\r\n";
+    CHECK(ClassifyExporterResult(1, out) == ExporterFailure::VcardChatMissing);
+}

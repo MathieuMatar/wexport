@@ -172,6 +172,19 @@ def build_msgstore(path: str, extra_messages: int) -> None:
     sticker = msg(chat_group, 0, None, mtype=20, sender=bob)
     media(sticker, chat_group, "Media/WhatsApp Stickers/STK-20260101-WA0004.webp", "image/webp")
 
+    # A one-to-one chat WhatsApp knows by a privacy ID (LID) mapped to a phone
+    # number, with a shared contact card in it. wtsexporter 0.13.x crashes on
+    # this ("'NoneType' object has no attribute 'get_message'"); the app works
+    # around it.
+    lid_chat_jid = jid("77777777777777", "lid", 17)
+    dan = jid("96174444444", "s.whatsapp.net")
+    db.execute("INSERT INTO jid_map VALUES (?, ?)", (lid_chat_jid, dan))
+    chat_lid = db.execute("INSERT INTO chat(jid_row_id, subject) VALUES (?, NULL)", (lid_chat_jid,)).lastrowid
+    msg(chat_lid, 0, "Hi, it's Dan")
+    card = msg(chat_lid, 0, "Mum", mtype=4)
+    db.execute("INSERT INTO message_vcard(message_row_id, vcard) VALUES (?, ?)",
+               (card, "BEGIN:VCARD\nVERSION:3.0\nFN:Mum\nTEL:+96170000099\nEND:VCARD\n"))
+
     # Members: creator = Alice, admin = Bob, member = Carol via lid, hidden lid, and me (user '').
     for user, rank in ((alice, 2), (bob, 1), (lid_mapped, 0), (lid_hidden, 0), (me, 0)):
         db.execute("INSERT INTO group_participant_user(group_jid_row_id, user_jid_row_id, rank, pending)"

@@ -67,6 +67,7 @@
                         <Button x:Uid="Welcome_Start" Style="{StaticResource AccentButtonStyle}" Click="OnStart" MinWidth="120" />
                     </StackPanel>
                     <HyperlinkButton x:Uid="Welcome_AlreadyCopied" Click="OnAlreadyCopied" Padding="0" />
+                    <HyperlinkButton x:Uid="Welcome_Continue" Click="OnContinueExport" Padding="0" />
                     <InfoBar x:Name="WelcomeError" Severity="Error" IsOpen="False" />
                 </StackPanel>
             </ScrollViewer>
